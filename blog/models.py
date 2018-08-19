@@ -15,6 +15,18 @@ def timestamp():
 def date():
     return datetime.now().strftime('%Y-%m-%d')
 
+
+# General functions
+def get_todays_recent_posts(number=5):
+    query = """
+    MATCH (user:User)-[:published]->(post:Post)<-[:tagged]-(tag:Tag)
+    WHERE post.date = {today}
+    RETURN user.username AS username, post, COLLECT(tag.name) AS tags
+    ORDER BY post.timestamp DESC LIMIT {number}
+    """
+    return graph.cypher.execute(query, today=date(), number=number)
+
+
 class User:
     """This is the object representing the User."""
     def __init__(self, username):
@@ -59,3 +71,12 @@ class User:
             tag = graph.merge_one("Tag", "name", tag)
             tag_relationship = Relationship(tag, "tagged", post)
             graph.create(tag_relationship)
+
+    def get_recent_posts(self, number=5):
+            query = """
+            MATCH (user:User)-[:published]->(post:Post)<-[:tagged]-(tag:Tag)
+            WHERE user.username = {username}
+            RETURN post, COLLECT(tag.name) AS tags
+            ORDER BY post.timestamp DESC LIMIT {number}
+            """
+            return graph.cypher.execute(query, username=self.username, number=number)

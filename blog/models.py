@@ -3,6 +3,12 @@ from passlib.hash import bcrypt
 from datetime import datetime
 import uuid
 
+# TODO: Check if required
+#url = os.environ.get('GRAPHENEDB_URL', 'http://localhost:7474')
+#username = os.environ.get('NEO4J_USERNAME')
+#password = os.environ.get('NEO4J_PASSWORD')
+#graph = Graph(url + '/db/data/', username=username, password=password)
+
 graph = Graph()
 
 # Helper functions

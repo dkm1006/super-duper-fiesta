@@ -53,3 +53,16 @@ def add_post():
         User(session['username']).add_post(title, tags, text)
 
     return redirect(url_for('index'))
+
+@app.route('/like_post/<post_id>', methods=['POST'])
+def like_post(post_id):
+    username = session.get('username')
+
+    if not username:
+        flash('You must be logged in to like a post.')
+        return redirect(url_for('login'))
+
+    User(username).like_post(post_id)
+
+    flash('Liked post.')
+    return redirect(request.referrer)

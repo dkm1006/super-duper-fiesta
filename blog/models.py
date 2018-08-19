@@ -80,3 +80,10 @@ class User:
             ORDER BY post.timestamp DESC LIMIT {number}
             """
             return graph.cypher.execute(query, username=self.username, number=number)
+
+    def like_post(self, post_id):
+        user = self.find()
+        post = graph.find_one("Post", "id", post_id)
+        like_relationship = Relationship(user, "liked", post)
+        graph.create_unique(like_relationship)
+        return True

@@ -5,6 +5,16 @@ import uuid
 
 graph = Graph()
 
+# Helper functions
+def timestamp():
+    epoch = datetime.utcfromtimestamp(0)
+    now = datetime.now()
+    delta = now - epoch
+    return delta.total_seconds()
+
+def date():
+    return datetime.now().strftime('%Y-%m-%d')
+
 class User:
     """This is the object representing the User."""
     def __init__(self, username):
@@ -25,9 +35,27 @@ class User:
 
     def verify_password(self, password):
         user = self.find()
-
         # Check if user was found
         if user:
             return bcrypt.verify(password, user['password'])
         else:
             return False
+
+    def add_post(self, title, text, tags):
+        user = self.find()
+        post = Node(
+            "Post",
+            id=str(uuid.uuid4()),
+            title=title,
+            text=text,
+            timestamp=timestamp(),
+            date=date()
+        )
+        publish_relationship = Relationship(user, "published", post)
+        graph.create(publish_relationship)
+
+        tags = [tag.strip() for tag in tags.lower().split(',')]
+        for tag in set(tags):
+            tag = graph.merge_one("Tag", "name", tag)
+            tag_relationship = Relationship(tag, "tagged", post)
+            graph.create(tag_relationship)

@@ -66,3 +66,9 @@ def like_post(post_id):
 
     flash('Liked post.')
     return redirect(request.referrer)
+
+@app.route('/logout', methods=['GET'])
+def logout():
+    session.pop('username', None)
+    flash('Logged out.')
+    return redirect(url_for('index'))

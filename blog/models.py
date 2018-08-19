@@ -15,10 +15,19 @@ class User:
         return user
 
     def register(self, password):
+        # Create a User node if the username does not exist
         if not self.find():
             user = Node("User", username = self.username, password = bcrypt.encrypt(password))
             graph.create(user)
             return True
+        else: # Notify the caller that the username already exists
+            return False
+
+    def verify_password(self, password):
+        user = self.find()
+
+        # Check if user was found
+        if user:
+            return bcrypt.verify(password, user['password'])
         else:
             return False
-            

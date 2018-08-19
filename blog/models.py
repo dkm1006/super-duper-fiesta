@@ -93,3 +93,27 @@ class User:
         like_relationship = Relationship(user, "liked", post)
         graph.create_unique(like_relationship)
         return True
+
+    def get_similar_users(self, number=3):
+        # Find similar users to logged-in user based on tags they blogged about
+        query = """
+        MATCH (you:User)-[:published]->(:Post)<-[:tagged]-(tag:Tag),
+        (they:User)-[:published]->(:Post)<-[:tagged]-(tag)
+        WHERE you.username = {username} AND you <> they
+        WITH they, COLLECT(DISTINCT tag.name) as tags
+        ORDER BY SIZE(tags) DESC LIMIT {number}
+        RETURN they.username as similar_user, tags
+        """
+        return graph.cypher.execute(query, username=self.username, number=number)
+
+    def get_commonality_of_user(self, other):
+        # Find number of likes and common topics both users blogged about
+        query = """
+        MATCH (they:User {username: {they} })
+        MATCH (you:User {username: {you} })
+        OPTIONAL MATCH (you)-[:published]->(:Post)<-[:tagged]-(tag:Tag),
+                       (they)-[:published]->(:Post)<-[:tagged]-(tag)
+        RETURN SIZE((they)-[:liked]->(:Post)<-[:published]-(you)) as likes,
+               COLLECT(DISTINCT tag.name) as tags
+        """
+        return graph.cypher.execute(query, they=other.username, you=self.username)

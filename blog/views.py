@@ -7,7 +7,7 @@ app = Flask(__name__)
 def index():
     posts = get_todays_recent_posts()
     return render_template('index.html', posts=posts)
-    
+
 @app.route('/register', methods=['GET','POST'])
 def register():
     if request.method == 'POST':
@@ -77,3 +77,29 @@ def logout():
     session.pop('username', None)
     flash('Logged out.')
     return redirect(url_for('index'))
+
+@app.route('/users/<username>')
+def profile(username):
+    logged_in_username = session.get('username')
+    viewed_username = username
+
+    viewed_user = User(viewed_username)
+    posts = viewed_user.get_recent_posts()
+
+    similar = []
+    common = []
+
+    if logged_in_username: # Check if logged in
+        if logged_in_username == viewed_username: # Show similar users
+            similar = viewed_user.get_similar_users()
+        else: # Show things in common
+            logged_in_user = User(logged_in_username)
+            common = logged_in_user.get_commonality_of_user(viewed_user)
+
+    return render_template(
+        'profile.html',
+        username=username,
+        posts=posts,
+        similar=similar,
+        common=common
+    )

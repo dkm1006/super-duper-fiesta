@@ -30,7 +30,7 @@ def get_todays_recent_posts(number=5):
     RETURN user.username AS username, post, COLLECT(tag.name) AS tags
     ORDER BY post.timestamp DESC LIMIT {number}
     """
-    return graph.cypher.execute(query, today=date(), number=number)
+    return graph.run(query, today=date(), number=number)
 
 
 class User:
@@ -85,7 +85,7 @@ class User:
             RETURN post, COLLECT(tag.name) AS tags
             ORDER BY post.timestamp DESC LIMIT {number}
             """
-            return graph.cypher.execute(query, username=self.username, number=number)
+            return graph.run(query, username=self.username, number=number)
 
     def like_post(self, post_id):
         user = self.find()
@@ -104,7 +104,7 @@ class User:
         ORDER BY SIZE(tags) DESC LIMIT {number}
         RETURN they.username as similar_user, tags
         """
-        return graph.cypher.execute(query, username=self.username, number=number)
+        return graph.run(query, username=self.username, number=number)
 
     def get_commonality_of_user(self, other):
         # Find number of likes and common topics both users blogged about
@@ -116,4 +116,4 @@ class User:
         RETURN SIZE((they)-[:liked]->(:Post)<-[:published]-(you)) as likes,
                COLLECT(DISTINCT tag.name) as tags
         """
-        return graph.cypher.execute(query, they=other.username, you=self.username)
+        return graph.run(query, they=other.username, you=self.username)

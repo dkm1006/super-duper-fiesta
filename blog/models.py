@@ -1,15 +1,17 @@
-from py2neo import Graph, Node, Relationship
+from py2neo import Graph, Node, Relationship, NodeMatcher
 from passlib.hash import bcrypt
 from datetime import datetime
 import uuid
+import os
 
-# TODO: Check if required
+# Setting environment variables
 #url = os.environ.get('GRAPHENEDB_URL', 'http://localhost:7474')
-#username = os.environ.get('NEO4J_USERNAME')
-#password = os.environ.get('NEO4J_PASSWORD')
-#graph = Graph(url + '/db/data/', username=username, password=password)
+username = os.environ.get('NEO4J_USERNAME')
+password = os.environ.get('NEO4J_PASSWORD')
+graph = Graph(username=username, password=password)
+selector = NodeMatcher(graph)
 
-graph = Graph()
+#graph = Graph()
 
 # Helper functions
 def timestamp():
@@ -39,7 +41,7 @@ class User:
         self.username = username
 
     def find(self):
-        user = graph.find_one("User", "username", name = self.username)
+        user = selector.match("User", username=self.username).first()
         return user
 
     def register(self, password):
@@ -73,8 +75,9 @@ class User:
         graph.create(publish_relationship)
 
         tags = [tag.strip() for tag in tags.lower().split(',')]
-        for tag in set(tags):
-            tag = graph.merge_one("Tag", "name", tag)
+        for tagname in set(tags):
+            tag = Node("Tag", name=tagname)
+            graph.merge(tag, "Tag", "name")
             tag_relationship = Relationship(tag, "tagged", post)
             graph.create(tag_relationship)
 
@@ -89,9 +92,9 @@ class User:
 
     def like_post(self, post_id):
         user = self.find()
-        post = graph.find_one("Post", "id", post_id)
+        post = selector.match("Post", id=post_id).first()
         like_relationship = Relationship(user, "liked", post)
-        graph.create_unique(like_relationship)
+        graph.merge(like_relationship)
         return True
 
     def get_similar_users(self, number=3):

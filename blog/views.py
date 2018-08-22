@@ -55,7 +55,7 @@ def add_post():
     elif not text:
         flash('You must give your post a text body.')
     else:
-        User(session['username']).add_post(title, tags, text)
+        User(session['username']).add_post(title=title, tags=tags, text=text)
 
     return redirect(url_for('index'))
 

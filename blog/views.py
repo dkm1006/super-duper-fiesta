@@ -3,6 +3,11 @@ from flask import Flask, request, session, redirect, url_for, render_template, f
 
 app = Flask(__name__)
 
+@app.route('/')
+def index():
+    posts = get_todays_recent_posts()
+    return render_template('index.html', posts=posts)
+
 @app.route('/register', methods=['GET','POST'])
 def register():
     if request.method == 'POST':
@@ -36,3 +41,65 @@ def login():
             return redirect(url_for('index'))
 
     return render_template('login.html')
+
+@app.route('/add_post', methods=['POST'])
+def add_post():
+    title = request.form['title']
+    tags = request.form['tags']
+    text = request.form['text']
+
+    if not title:
+        flash('You must give your post a title.')
+    elif not tags:
+        flash('You must give your post at least one tag.')
+    elif not text:
+        flash('You must give your post a text body.')
+    else:
+        User(session['username']).add_post(title, tags, text)
+
+    return redirect(url_for('index'))
+
+@app.route('/like_post/<post_id>', methods=['POST'])
+def like_post(post_id):
+    username = session.get('username')
+
+    if not username:
+        flash('You must be logged in to like a post.')
+        return redirect(url_for('login'))
+
+    User(username).like_post(post_id)
+
+    flash('Liked post.')
+    return redirect(request.referrer)
+
+@app.route('/logout', methods=['GET'])
+def logout():
+    session.pop('username', None)
+    flash('Logged out.')
+    return redirect(url_for('index'))
+
+@app.route('/users/<username>')
+def profile(username):
+    logged_in_username = session.get('username')
+    viewed_username = username
+
+    viewed_user = User(viewed_username)
+    posts = viewed_user.get_recent_posts()
+
+    similar = []
+    common = []
+
+    if logged_in_username: # Check if logged in
+        if logged_in_username == viewed_username: # Show similar users
+            similar = viewed_user.get_similar_users()
+        else: # Show things in common
+            logged_in_user = User(logged_in_username)
+            common = logged_in_user.get_commonality_of_user(viewed_user)
+
+    return render_template(
+        'profile.html',
+        username=username,
+        posts=posts,
+        similar=similar,
+        common=common
+    )

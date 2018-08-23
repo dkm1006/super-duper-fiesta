@@ -6,8 +6,8 @@ import os
 
 # Setting environment variables
 #url = os.environ.get('GRAPHENEDB_URL', 'http://localhost:7474')
-username = os.environ.get('NEO4J_USERNAME')
-password = os.environ.get('NEO4J_PASSWORD')
+username = os.environ.get('NEO4J_USERNAME','neo4j')
+password = os.environ.get('NEO4J_PASSWORD','neo4j')
 graph = Graph(username=username, password=password)
 selector = NodeMatcher(graph)
 
